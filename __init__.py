@@ -8,7 +8,8 @@ from nonebot.params import CommandArg
 import os
 import random
 import nonebot.adapters.onebot.v11
-import nonebot.adapters.console
+
+# import nonebot.adapters.console
 
 from .img import wordleOutput
 
@@ -37,7 +38,7 @@ __plugin_meta__ = PluginMetadata(
     },
 )
 
-enabled_groups = ["154976100", "576843479", "835090664"]
+enabled_groups = ["154976100", "576843479"]
 ban_user = [""]
 
 
@@ -82,7 +83,10 @@ unused: list[str] = []
 helpDict = dict()
 helpDict.fromkeys("help", "想想你现在在用什么.")
 helpDict.fromkeys("rule", "显示规则, 就像你想的那样.")
-helpDict.fromkeys("start", "开始 wordle, 你需要提供一个 3~12之间的数作为单词的长度, bot 会帮你选择单词.")
+helpDict.fromkeys(
+    "start",
+    "开始 wordle, 你需要提供一个 3~12之间的数作为单词的长度, bot 会帮你选择单词.",
+)
 helpDict.fromkeys("guess", "猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.")
 helpDict.fromkeys("giveup", "需要 @bot 或私聊 这将直接放弃该局游戏并获取正确答案,慎用!")
 helpDict.fromkeys("remain", "显示未使用过的单词,就像你想的那样.")
@@ -120,7 +124,9 @@ async def wordleHelp(args: Message = CommandArg()):
         if command in helpDict.keys():
             await help.finish("bot: " + helpDict[command])
         else:
-            await help.finish("[Error] bot: Unknown Command; return '请给出正确的参数!'.")
+            await help.finish(
+                "[Error] bot: Unknown Command; return '请给出正确的参数!'."
+            )
 
 
 # 规则
@@ -132,9 +138,12 @@ async def wordleRule():
     res = res + "规则\n"
     res = res + "  你需要使用 /wordle.start <len> 来开始 wordle, \n"
     res = res + "  你需要提供一个 3~12之间的数作为单词的长度, bot 会帮你选择单词.\n"
-    res = res + "  使用 /wordle.guess <word> 来猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.\n"
+    res = (
+        res
+        + "  使用 /wordle.guess <word> 来猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.\n"
+    )
     res = res + "  使用 /wordle.remain 显示未使用过的字母.\n"
-    res = res + "  由于一些原因, bot 给出的匹配情况使用纯文本进行表示\n"
+    # res = res + "  由于一些原因, bot 给出的匹配情况使用纯文本进行表示\n"
     res = res + "  + 表示该字母完全匹配 ? 表示该字母存在但位置错误 * 表示该字母不存在\n"
     res = res + "  祝您愉快~"
     await rule.send(res)
@@ -182,9 +191,13 @@ async def wordleStart(args: Message = CommandArg()):
     try:
         wordlen = int(text)
         if wordlen < 3:
-            await start.finish("[Error] bot: Unexcepted Input; Return '单词长度不应小于3!'.")
+            await start.finish(
+                "[Error] bot: Unexcepted Input; Return '单词长度不应小于3!'."
+            )
         if wordlen > 12:
-            await start.finish("[Error] bot: Unexcepted Input; Return '单词长度不应大于12!'.")
+            await start.finish(
+                "[Error] bot: Unexcepted Input; Return '单词长度不应大于12!'."
+            )
         # await start.send("[Info] bot: Finding Word...")
     except ValueError:
         await start.finish("[Error] bot: ValueError; Return '请给出正确的单词长度!'.")
@@ -263,6 +276,7 @@ async def wordleGuessPlus(
     trycnt = trycnt + 1
     if guessWord == keyWord:
         # await guess.send("bot: Game Over!")
+        # TODO: 检测是否处于群聊
         await bot.send_group_msg(
             group_id=int(event.get_session_id().split("_")[1]),
             message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}!\n你们总共进行了 {str(trycnt)}次猜测.",
@@ -305,6 +319,7 @@ async def wordleGuessPlus(
     await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
 
 
+"""
 @guess.handle()
 async def wordleGuess(args: nonebot.adapters.console.Message = CommandArg()):
     global keyWord
@@ -328,7 +343,12 @@ async def wordleGuess(args: nonebot.adapters.console.Message = CommandArg()):
     if guessWord == keyWord:
         # await guess.send("bot: Game Over!")
         await guess.send(
-            "bot: 游戏结束! \n答案为 " + keyWord + "!\n" + "你们总共进行了 " + str(trycnt) + "次猜测."
+            "bot: 游戏结束! \n答案为 "
+            + keyWord
+            + "!\n"
+            + "你们总共进行了 "
+            + str(trycnt)
+            + "次猜测."
         )
         # await guess.send("bot: 正在清理缓存.")
         keyWord = ""
@@ -366,6 +386,7 @@ async def wordleGuess(args: nonebot.adapters.console.Message = CommandArg()):
     for i in historyGuess:
         sendMessage = sendMessage + "\n" + i
     await guess.send(sendMessage)
+"""
 
 
 @giveup.handle()
@@ -417,6 +438,7 @@ async def wordleHistoryPlus(args: nonebot.adapters.onebot.v11.Message = CommandA
     await history.send(sendMessage)
 
 
+"""
 @history.handle()
 async def wordleHistory(args: nonebot.adapters.console.Message = CommandArg()):
     global keyWord
@@ -428,3 +450,4 @@ async def wordleHistory(args: nonebot.adapters.console.Message = CommandArg()):
     sendImg: str = wordleOutput(historyGuess)
     sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
     await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
+"""
