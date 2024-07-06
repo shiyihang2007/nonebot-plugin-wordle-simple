@@ -1,3 +1,4 @@
+from get_translate import translate
 from nonebot import CommandGroup
 from nonebot.adapters import Event
 from nonebot.rule import to_me
@@ -279,7 +280,7 @@ async def wordleGuessPlus(
         # TODO: 检测是否处于群聊
         await bot.send_group_msg(
             group_id=int(event.get_session_id().split("_")[1]),
-            message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}!\n你们总共进行了 {str(trycnt)}次猜测.",
+            message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{translate(keyWord)}",
         )
         # await guess.send("bot: 正在清理缓存.")
         keyWord = ""
