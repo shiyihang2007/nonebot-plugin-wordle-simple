@@ -1,4 +1,3 @@
-from get_translate import translate
 from nonebot import CommandGroup
 from nonebot.adapters import Event
 from nonebot.rule import to_me
@@ -13,7 +12,7 @@ import nonebot.adapters.onebot.v11
 # import nonebot.adapters.console
 
 from .img import wordleOutput
-
+from .get_translate import translate
 
 # 命令注册
 
