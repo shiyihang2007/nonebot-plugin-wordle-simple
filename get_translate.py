@@ -9,26 +9,29 @@ translateServices = {
 
 
 def translate(word: str) -> str:
-    try:
-        url = translateServices["Bing"]
-        url = url.replace("[word]", word)
-        r = httpx.get(url)
-        rp: str = r.text
-        m: re.Match = re.search(
-            r'<meta name="description" content="必应词典为您提供.+的释义，(.+) " ?\/?>',
-            rp,
-        )
-        tl: str = m.group(1)
-        tl = tl.replace("，", ",")
-        tl = tl.replace("。", ".")
-        tl = tl.replace("：", ":")
-        tl = tl.replace("；", ";")
-        tl_ano = re.search(r".*\[.*\]", tl).group(0)
-        tl = tl.replace(tl_ano + ",", tl_ano + "\n")
-        tl = tl.replace("; ", "\n")
-        return tl
-    except TypeError:
-        return "Translate Service Error"
+    for i in range(3):
+        try:
+            url = translateServices["Bing"]
+            url = url.replace("[word]", word)
+            r = httpx.get(url)
+            rp: str = r.text
+            m: re.Match = re.search(
+                r'<meta name="description" content="必应词典为您提供.+的释义，(.+) " ?\/?>',
+                rp,
+            )
+            tl: str = m.group(1)
+            tl = tl.replace("，", ",")
+            tl = tl.replace("。", ".")
+            tl = tl.replace("：", ":")
+            tl = tl.replace("；", ";")
+            tl_ano = re.search(r".*\[.*\]", tl).group(0)
+            tl = tl.replace(tl_ano + ",", tl_ano + "\n")
+            tl = tl.replace("; ", "\n")
+        except:
+            pass
+        else:
+            return tl
+    return "Translate Service Error"
 
 
 if __name__ == "__main__":
