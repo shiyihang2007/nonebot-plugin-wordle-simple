@@ -1,6 +1,7 @@
 import re
 from sys import argv
 import httpx
+from nonebot.log import logger
 
 
 translateServices = {
@@ -9,7 +10,7 @@ translateServices = {
 
 
 def translate(word: str) -> str:
-    for i in range(3):
+    for i in range(5):
         try:
             url = translateServices["Bing"]
             url = url.replace("[word]", word)
@@ -27,8 +28,8 @@ def translate(word: str) -> str:
             tl_ano = re.search(r".*\[.*\]", tl).group(0)
             tl = tl.replace(tl_ano + ",", tl_ano + "\n")
             tl = tl.replace("; ", "\n")
-        except:
-            pass
+        except BaseException as e:
+            logger.warning(f"Catched error {type(e).__name__}:{e} when translating")
         else:
             return tl
     return "Translate Service Error"
