@@ -9,12 +9,13 @@ translateServices = {
 }
 
 
-def translate(word: str) -> str:
-    for i in range(5):
+async def translate(word: str) -> str:
+    for i in range(3):
         try:
             url = translateServices["Bing"]
             url = url.replace("[word]", word)
-            r = httpx.get(url)
+            async with httpx.AsyncClient() as client:
+                r = await client.get(url)
             rp: str = r.text
             m: re.Match = re.search(
                 r'<meta name="description" content="必应词典为您提供.+的释义，(.+) " ?\/?>',
