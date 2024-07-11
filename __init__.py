@@ -283,7 +283,7 @@ async def wordleGuessPlus(
         asyncio.create_task(
             bot.send_group_msg(
                 group_id=int(event.get_session_id().split("_")[1]),
-                message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{translate(keyWord)}",
+                message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{await translate(keyWord)}",
             )
         )
         # await guess.send("bot: 正在清理缓存.")
