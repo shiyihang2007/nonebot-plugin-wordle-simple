@@ -1,3 +1,4 @@
+from asyncio import Task, tasks
 from nonebot import CommandGroup
 from nonebot.adapters import Event
 from nonebot.rule import to_me
@@ -5,9 +6,11 @@ from nonebot.plugin import PluginMetadata
 from nonebot.adapters import Message
 from nonebot.params import CommandArg
 
+import nonebot.adapters.onebot.v11
+
 import os
 import random
-import nonebot.adapters.onebot.v11
+import asyncio
 
 # import nonebot.adapters.console
 
@@ -277,9 +280,11 @@ async def wordleGuessPlus(
     if guessWord == keyWord:
         # await guess.send("bot: Game Over!")
         # TODO: 检测是否处于群聊
-        await bot.send_group_msg(
-            group_id=int(event.get_session_id().split("_")[1]),
-            message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{translate(keyWord)}",
+        asyncio.create_task(
+            bot.send_group_msg(
+                group_id=int(event.get_session_id().split("_")[1]),
+                message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{translate(keyWord)}",
+            )
         )
         # await guess.send("bot: 正在清理缓存.")
         keyWord = ""
@@ -397,13 +402,15 @@ async def wordleGiveUp():
     global historyGuess
     if keyWord == "":
         await giveup.finish("bot: 当前没有正在进行的 Wordle!")
-    await guess.send(
-        "bot: 放弃了这局 wordle! \n答案为 "
-        + keyWord
-        + "!\n"
-        + "你们总共进行了 "
-        + str(trycnt)
-        + "次猜测."
+    asyncio.create_task(
+        await guess.send(
+            "bot: 放弃了这局 wordle! \n答案为 "
+            + keyWord
+            + "!\n"
+            + "你们总共进行了 "
+            + str(trycnt)
+            + "次猜测."
+        )
     )
     keyWord = ""
     trycnt = 0
