@@ -302,7 +302,7 @@ async def wordleStart(args: Message = CommandArg()):
     trycnt = 0
     historyGuessWord = []
     historyGuess = []
-    usedChars = {}
+    usedChars = set()
     keyWord = wordlist[random.randint(0, len(wordlist))]
     fdict = open(os.path.split(__file__)[0] + "/GuessDictionary.txt", "r")
     dictionary = fdict.readlines()
@@ -350,7 +350,7 @@ async def wordleGuessPlus(
         trycnt = 0
         historyGuess.clear()
         dictionary = []
-        usedChars = {}
+        usedChars = set()
         return
         # await guess.finish("bot: 清理结束.")
     matchState: list = [0] * len(keyWord)
