@@ -217,34 +217,7 @@ async def wordleStart(args: Message = CommandArg()):
     historyGuessWord = []
     historyGuess = []
     keyWord = wordlist[random.randint(0, len(wordlist))]
-    unused = [
-        "a",
-        "b",
-        "c",
-        "d",
-        "e",
-        "f",
-        "g",
-        "h",
-        "i",
-        "j",
-        "k",
-        "l",
-        "m",
-        "n",
-        "o",
-        "p",
-        "q",
-        "r",
-        "s",
-        "t",
-        "u",
-        "v",
-        "w",
-        "x",
-        "y",
-        "z",
-    ]
+    unused = [x for x in range("a", "z")]
     fdict = open(os.path.split(__file__)[0] + "/GuessDictionary.txt", "r")
     dictionary = fdict.readlines()
     fdict.close()
@@ -268,7 +241,7 @@ async def wordleGuessPlus(
     if keyWord == "":
         await guess.finish("bot: 当前没有正在进行的 Wordle!")
     # await guess.finish("bot: 此功能未完成, 正在咕咕中! [100/100]")
-    guessWord = args.extract_plain_text().split()[0]
+    guessWord = args.extract_plain_text().split()[0].lower()
     if dictionary.count(guessWord) == 0:
         await guess.finish("bot: " + guessWord + " 不是一个单词!")
     if len(guessWord) != len(keyWord):
@@ -293,105 +266,31 @@ async def wordleGuessPlus(
         dictionary = []
         return
         # await guess.finish("bot: 清理结束.")
-    matchState: list[int] = []
-    matchStateK: list[int] = []
-    for i in range(len(guessWord)):
-        matchState.append(0)
-        matchStateK.append(0)
-        try:
-            unused.remove(guessWord[i])
-        except ValueError:
-            pass
+    matchState: list = [0] * len(keyWord)
+    matchCount: list = [0] * 26
+    for i in range(len(keyWord)):
         if guessWord[i] == keyWord[i]:
             matchState[i] = 1
-            matchStateK[i] = 1
+            matchCount[ord(guessWord[i]) - ord("a")] += 1
     for i in range(len(guessWord)):
         if matchState[i] == 1:
             continue
-        for j in range(len(guessWord)):
-            if matchStateK[j] != 0:
-                continue
-            if guessWord[i] == keyWord[j]:
-                matchState[i] = 2
-                matchStateK[j] = 2
+        if matchCount[ord(guessWord[i]) - ord("a")] < keyWord.count(guessWord[i]):
+            matchState[i] = 2
+            matchCount[ord(guessWord[i]) - ord("a")] += 1
     res: str = ""
     for i in range(len(guessWord)):
         res = res + guessWord[i]
         res = res + "*+?"[matchState[i]]
     historyGuess.append(res)
-    sendImg: str = wordleOutput(historyGuess)
-    sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
+    if args.extract_plain_text() in ["-p", "--plain"]:
+        sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
+        for i in historyGuess:
+            sendMessage = sendMessage + "\n" + i
+    else:
+        sendImg: str = wordleOutput(historyGuess)
+        sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
     await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
-
-
-"""
-@guess.handle()
-async def wordleGuess(args: nonebot.adapters.console.Message = CommandArg()):
-    global keyWord
-    global dictionary
-    global trycnt
-    global historyGuess
-    global historyGuessWord
-    global unused
-    if keyWord == "":
-        await guess.finish("bot: 当前没有正在进行的 Wordle!")
-    # await guess.finish("bot: 此功能未完成, 正在咕咕中! [100/100]")
-    guessWord = args.extract_plain_text().split()[0]
-    if dictionary.count(guessWord) == 0:
-        await guess.finish("bot: " + guessWord + " 不是一个单词!")
-    if len(guessWord) != len(keyWord):
-        await guess.finish("bot: 请输入长度为 " + str(len(keyWord)) + " 的单词!")
-    if guessWord in historyGuessWord:
-        await guess.finish("bot: 此单词已经尝试过!")
-    historyGuessWord.append(guessWord)
-    trycnt = trycnt + 1
-    if guessWord == keyWord:
-        # await guess.send("bot: Game Over!")
-        await guess.send(
-            "bot: 游戏结束! \n答案为 "
-            + keyWord
-            + "!\n"
-            + "你们总共进行了 "
-            + str(trycnt)
-            + "次猜测."
-        )
-        # await guess.send("bot: 正在清理缓存.")
-        keyWord = ""
-        trycnt = 0
-        historyGuess.clear()
-        dictionary = []
-        # await guess.finish("bot: 清理结束.")
-    matchState: list[int] = []
-    matchStateK: list[int] = []
-    for i in range(len(guessWord)):
-        matchState.append(0)
-        matchStateK.append(0)
-        try:
-            unused.remove(guessWord[i])
-        except ValueError:
-            pass
-        if guessWord[i] == keyWord[i]:
-            matchState[i] = 1
-            matchStateK[i] = 1
-    for i in range(len(guessWord)):
-        if matchState[i] == 1:
-            continue
-        for j in range(len(guessWord)):
-            if matchStateK[j] != 0:
-                continue
-            if guessWord[i] == keyWord[j]:
-                matchState[i] = 2
-                matchStateK[j] = 2
-    res: str = ""
-    for i in range(len(guessWord)):
-        res = res + guessWord[i]
-        res = res + "*+?"[matchState[i]]
-    historyGuess.append(res)
-    sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
-    for i in historyGuess:
-        sendMessage = sendMessage + "\n" + i
-    await guess.send(sendMessage)
-"""
 
 
 @giveup.handle()
@@ -439,22 +338,11 @@ async def wordleHistoryPlus(args: nonebot.adapters.onebot.v11.Message = CommandA
     global historyGuess
     if keyWord == "":
         await remain.finish("bot: 当前没有正在进行的 Wordle!")
-    sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
-    for i in historyGuess:
-        sendMessage = sendMessage + "\n" + i
-    await history.send(sendMessage)
-
-
-"""
-@history.handle()
-async def wordleHistory(args: nonebot.adapters.console.Message = CommandArg()):
-    global keyWord
-    global dictionary
-    global trycnt
-    global historyGuess
-    if keyWord == "":
-        await remain.finish("bot: 当前没有正在进行的 Wordle!")
-    sendImg: str = wordleOutput(historyGuess)
-    sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
+    if args.extract_plain_text() in ["-p", "--plain"]:
+        sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
+        for i in historyGuess:
+            sendMessage = sendMessage + "\n" + i
+    else:
+        sendImg: str = wordleOutput(historyGuess)
+        sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
     await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
-"""
