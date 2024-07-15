@@ -108,7 +108,7 @@ historyGuess: list[str] = []
 historyGuessWord: list[str] = []
 trycnt: int = 0
 dictionary: list[str] = []
-unused: list[str] = []
+usedChars: set[str] = {}
 
 
 # admin
@@ -272,7 +272,7 @@ async def wordleStart(args: Message = CommandArg()):
     global trycnt
     global historyGuess
     global historyGuessWord
-    global unused
+    global usedChars
     if keyWord != "":
         await start.finish("bot: 当前已有正在进行的 Wordle!")
     text = args.extract_plain_text()
@@ -302,8 +302,8 @@ async def wordleStart(args: Message = CommandArg()):
     trycnt = 0
     historyGuessWord = []
     historyGuess = []
+    usedChars = {}
     keyWord = wordlist[random.randint(0, len(wordlist))]
-    unused = [chr(x) for x in range(ord("a"), ord("z") + 1)]
     fdict = open(os.path.split(__file__)[0] + "/GuessDictionary.txt", "r")
     dictionary = fdict.readlines()
     fdict.close()
@@ -323,7 +323,7 @@ async def wordleGuessPlus(
     global trycnt
     global historyGuess
     global historyGuessWord
-    global unused
+    global usedChars
     if keyWord == "":
         await guess.finish("bot: 当前没有正在进行的 Wordle!")
     # await guess.finish("bot: 此功能未完成, 正在咕咕中! [100/100]")
@@ -350,11 +350,13 @@ async def wordleGuessPlus(
         trycnt = 0
         historyGuess.clear()
         dictionary = []
+        usedChars = {}
         return
         # await guess.finish("bot: 清理结束.")
     matchState: list = [0] * len(keyWord)
     matchCount: list = [0] * 26
     for i in range(len(keyWord)):
+        usedChars.add(guessWord[i])
         if guessWord[i] == keyWord[i]:
             matchState[i] = 1
             matchCount[ord(guessWord[i]) - ord("a")] += 1
@@ -407,11 +409,11 @@ async def wordleGiveUp():
 @remain.handle()
 async def wordleRemain(args: Message = CommandArg()):
     global keyWord
-    global unused
+    global usedChars
     if keyWord == "":
         await remain.finish("bot: 当前没有正在进行的 Wordle!")
     output: str = "bot: \n 未使用的字母: "
-    for i in unused:
+    for i in [chr(x) for x in range(chr("a"), chr("z") + 1) if chr(x) not in usedChars]:
         output = output + i + " "
     await remain.send(output)
 
