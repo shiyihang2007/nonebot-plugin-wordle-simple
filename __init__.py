@@ -413,7 +413,7 @@ async def wordleRemain(args: Message = CommandArg()):
     if keyWord == "":
         await remain.finish("bot: 当前没有正在进行的 Wordle!")
     output: str = "bot: \n 未使用的字母: "
-    for i in [chr(x) for x in range(chr("a"), chr("z") + 1) if chr(x) not in usedChars]:
+    for i in [chr(x) for x in range(ord("a"), ord("z") + 1) if chr(x) not in usedChars]:
         output = output + i + " "
     await remain.send(output)
 
