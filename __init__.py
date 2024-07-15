@@ -114,51 +114,51 @@ unused: list[str] = []
 # admin
 @debugEnable.handle()
 async def _():
-    global debugEnabled
-    debugEnabled = True
+    global config
+    config.debug_enabled = True
 
 
 @debugDisable.handle()
 async def _():
-    global debugEnabled
-    debugEnabled = False
+    global config
+    config.debug_enabled = False
 
 
 @changeMinLength.handle()
 async def _(args: Message = CommandArg()):
-    global wordleMinLength
+    global config
     try:
-        wordleMinLength = int(args.extract_plain_text()[0])
+        config.length_min = int(args.extract_plain_text()[0])
     except TypeError:
         await changeMinLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if wordleMinLength < 2:
+    if config.length_min < 2:
         await changeMinLength.send(
-            f"错误! 最小单词长度({wordleMinLength})过小, 已自动更改为 2."
+            f"错误! 最小单词长度({config.length_min})过小, 已自动更改为 2."
         )
-        wordleMinLength = 2
-    await changeMinLength.send(f"最小单词长度已设为 {wordleMinLength}")
-    if wordleMinLength > wordleMaxLength:
+        config.length_min = 2
+    await changeMinLength.send(f"最小单词长度已设为 {config.length_min}")
+    if config.length_min > config.length_max:
         await changeMinLength.send(
-            f"警告! 最小单词长度({wordleMinLength})大于最大单词长度({wordleMaxLength})."
+            f"警告! 最小单词长度({config.length_min})大于最大单词长度({config.length_max})."
         )
 
 
 @changeMaxLength.handle()
 async def _(args: Message = CommandArg()):
-    global wordleMaxLength
+    global config
     try:
-        wordleMaxLength = int(args.extract_plain_text()[0])
+        config.length_max = int(args.extract_plain_text()[0])
     except TypeError:
         await changeMaxLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if wordleMaxLength > 15:
+    if config.length_max > 15:
         await changeMaxLength.send(
-            f"错误! 最大单词长度({wordleMaxLength})过大, 已自动更改为 15."
+            f"错误! 最大单词长度({config.length_max})过大, 已自动更改为 15."
         )
-        wordleMaxLength = 15
-    await changeMaxLength.send(f"最大单词长度已设为 {wordleMaxLength}")
-    if wordleMaxLength < wordleMinLength:
+        config.length_max = 15
+    await changeMaxLength.send(f"最大单词长度已设为 {config.length_max}")
+    if config.length_max < config.length_min:
         await changeMaxLength.send(
-            f"警告! 最大单词长度({wordleMaxLength})小于最小单词长度({wordleMinLength})."
+            f"警告! 最大单词长度({config.length_max})小于最小单词长度({config.length_min})."
         )
 
 
@@ -186,7 +186,7 @@ async def _(event: GroupMessageEvent):
 helpDict = {
     "help": "想想你现在在用什么.",
     "rule": "显示规则, 就像你想的那样.",
-    "start": f"开始 wordle, 你需要提供一个 {wordleMinLength}~{wordleMaxLength}之间的数作为单词的长度, bot 会帮你选择单词.",
+    "start": f"开始 wordle, 你需要提供一个 {config.length_min}~{config.length_max}之间的数作为单词的长度, bot 会帮你选择单词.",
     "guess": "猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.",
     "giveup": "需要 @bot 或私聊 这将直接放弃该局游戏并获取正确答案,慎用!",
     "remain": "显示未使用过的单词,就像你想的那样.",
@@ -244,7 +244,7 @@ async def wordleDebug(args: Message = CommandArg()):
     global dictionary
     global trycnt
     global historyGuess
-    if not debugEnabled:
+    if not config.debug_enabled:
         await debug.finish("bot: 你想干什么? [恼]")
     text: str = args.extract_plain_text()
     if text == "dictionary":
