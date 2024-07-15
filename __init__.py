@@ -303,7 +303,7 @@ async def wordleStart(args: Message = CommandArg()):
     historyGuessWord = []
     historyGuess = []
     keyWord = wordlist[random.randint(0, len(wordlist))]
-    unused = [x for x in range("a", "z")]
+    unused = [chr(x) for x in range(ord("a"), ord("z") + 1)]
     fdict = open(os.path.split(__file__)[0] + "/GuessDictionary.txt", "r")
     dictionary = fdict.readlines()
     fdict.close()
