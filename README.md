@@ -6,15 +6,15 @@
 
 <div align="center">
 
-# nonebot-plugin-wordle
+# nonebot-plugin-wordle-simple
 
 _✨ 简单英语猜词 ✨_
 
 <a href="./LICENSE">
-    <img src="https://img.shields.io/github/license/owner/nonebot-plugin-wordle.svg" alt="license">
+    <img src="https://img.shields.io/github/license/shiyihang2007/nonebot-plugin-wordle-simple.svg" alt="license">
 </a>
-<a href="https://pypi.python.org/pypi/nonebot-plugin-wordle">
-    <img src="https://img.shields.io/pypi/v/nonebot-plugin-wordle.svg" alt="pypi">
+<a href="https://pypi.python.org/pypi/nonebot-plugin-wordle-simple">
+    <img src="https://img.shields.io/pypi/v/nonebot-plugin-wordle-simple.svg" alt="pypi">
 </a>
 <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
 
@@ -22,7 +22,7 @@ _✨ 简单英语猜词 ✨_
 
 ## 📖 介绍
 
-这是一个 nonebot2 的猜词游戏 (Wordle) 插件，没有次数限制，可以自定义词库，支持群聊白名单和用户黑名单。
+这是一个简单的 nonebot2 的猜词游戏 (Wordle) 插件，没有次数限制，可以自定义词库，支持群聊白名单和用户黑名单。
 
 ## 💿 安装
 
@@ -30,7 +30,7 @@ _✨ 简单英语猜词 ✨_
 <summary>使用 nb-cli 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
-    nb plugin install nonebot-plugin-wordle
+    nb plugin install nonebot-plugin-wordle-simple
 
 </details>
 
@@ -41,27 +41,27 @@ _✨ 简单英语猜词 ✨_
 <details>
 <summary>pip</summary>
 
-    pip install nonebot-plugin-wordle
+    pip install nonebot-plugin-wordle-simple
 </details>
 <details>
 <summary>pdm</summary>
 
-    pdm add nonebot-plugin-wordle
+    pdm add nonebot-plugin-wordle-simple
 </details>
 <details>
 <summary>poetry</summary>
 
-    poetry add nonebot-plugin-wordle
+    poetry add nonebot-plugin-wordle-simple
 </details>
 <details>
 <summary>conda</summary>
 
-    conda install nonebot-plugin-wordle
+    conda install nonebot-plugin-wordle-simple
 </details>
 
 打开 nonebot2 项目根目录下的 `pyproject.toml` 文件, 在 `[tool.nonebot]` 部分追加写入
 
-    plugins = ["nonebot_plugin_wordle"]
+    plugins = ["nonebot_plugin_wordle_simple"]
 
 </details>
 
