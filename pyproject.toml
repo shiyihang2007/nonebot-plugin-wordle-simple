@@ -16,7 +16,7 @@ documentation = "https://github.com/shiyihang2007/nonebot-plugin-wordle-simple"
 # default = true
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.10"
 nonebot2 = ">=2.0.0rc1"
 nonebot-adapter-onebot = ">=2.4.4"
 pillow = ">=10.4.0"
