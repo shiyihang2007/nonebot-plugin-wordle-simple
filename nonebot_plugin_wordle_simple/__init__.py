@@ -47,7 +47,7 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "nonebot_plugin_wordle_simple",
         "example": "",
         "author": "shiyihang <467557146@qq.com>",
-        "version": "0.0.3",
+        "version": "0.0.4",
     },
 )
 
