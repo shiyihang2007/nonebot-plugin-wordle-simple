@@ -39,11 +39,15 @@ __plugin_meta__ = PluginMetadata(
         "  wordle.history 显示历史猜测\n"
         "注意 此功能可能会造成刷屏"
     ),
+    type="application",
+    homepage="https://www.github.com/shiyihang2007/nonebot-plugin-wordle-simple/",
+    config=Config,
+    supported_adapters={"~onebot.v11"},
     extra={
-        "unique_name": "nonebot_plugin_wordle",
+        "unique_name": "nonebot_plugin_wordle_simple",
         "example": "",
         "author": "shiyihang <467557146@qq.com>",
-        "version": "0.2.1",
+        "version": "0.0.2",
     },
 )
 
