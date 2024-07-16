@@ -85,7 +85,7 @@ async def is_admin(bot: Bot, event: MessageEvent, state: T_State) -> bool:
     return False
 
 
-wordleGroup: CommandGroup = CommandGroup("wordle")
+wordleGroup: CommandGroup = CommandGroup("wordle", priority=config.command_priority)
 
 debugEnable = wordleGroup.command("debug_enable", permission=SUPERUSER)
 debugDisable = wordleGroup.command("debug_disable", permission=SUPERUSER)

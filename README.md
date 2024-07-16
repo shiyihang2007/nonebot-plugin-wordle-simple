@@ -71,6 +71,7 @@ _✨ 简单英语猜词 ✨_
 
 | 配置项 | 必填 | 默认值 | 说明 |
 |:-----:|:----:|:----:|:----:|
+| wordle__command_priority | 否| 10 | 命令响应优先级 |
 | wordle__groups_enabled | 是 | - | 白名单群聊, 格式为字符串列表 |
 | wordle__ban_user | 否 | [] | 黑名单用户, 格式为字符串列表 |
 | wordle__length_min | 否 | 4 | 最小单词长度 |
