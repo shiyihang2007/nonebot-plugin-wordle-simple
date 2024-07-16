@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "nonebot-plugin-wordle"
+version = "0.0.1"
+description = "一个简单的没有次数限制的猜词游戏 (Wordle) 插件"
+authors = ["shiyihang2007 <467557146@qq.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "nonebot_plugin_wordle"}]
+homepage = "https://github.com/shiyihang2007/nonebot-plugin-wordle"
+repository = "https://github.com/shiyihang2007/nonebot-plugin-wordle"
+documentation = "https://github.com/shiyihang2007/nonebot-plugin-wordle"
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+default = true
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+nonebot2 = ">=2.0.0rc1"
+nonebot-adapter-onebot = ">=2.4.4"
+pillow = ">=10.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

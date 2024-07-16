@@ -81,7 +81,7 @@ async def is_admin(bot: Bot, event: MessageEvent, state: T_State) -> bool:
     return False
 
 
-wordleGroup: CommandGroup = CommandGroup("wordle", rule=is_enabled)
+wordleGroup: CommandGroup = CommandGroup("wordle")
 
 debugEnable = wordleGroup.command("debug_enable", permission=SUPERUSER)
 debugDisable = wordleGroup.command("debug_disable", permission=SUPERUSER)
@@ -91,15 +91,15 @@ changeMaxLength = wordleGroup.command("change_max_length", permission=SUPERUSER)
 commandEnable = wordleGroup.command("enable", aliases={"启用"}, rule=is_admin)
 commandDisable = wordleGroup.command("disable", aliases={"禁用"}, rule=is_admin)
 
-wordle = wordleGroup.command(tuple())
-help = wordleGroup.command("help")
-rule = wordleGroup.command("rule")
-start = wordleGroup.command("start")
-guess = wordleGroup.command("guess")
-giveup = wordleGroup.command("giveup", rule=to_me())
-remain = wordleGroup.command("remain")
-history = wordleGroup.command("history")
-debug = wordleGroup.command("debug")
+wordle = wordleGroup.command(tuple(), rule=is_enabled)
+help = wordleGroup.command("help", rule=is_enabled)
+rule = wordleGroup.command("rule", rule=is_enabled)
+start = wordleGroup.command("start", rule=is_enabled)
+guess = wordleGroup.command("guess", rule=is_enabled)
+giveup = wordleGroup.command("giveup", rule=is_enabled & to_me())
+remain = wordleGroup.command("remain", rule=is_enabled)
+history = wordleGroup.command("history", rule=is_enabled)
+debug = wordleGroup.command("debug", rule=is_enabled)
 
 
 # 全局变量初始化
