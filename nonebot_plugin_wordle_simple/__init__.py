@@ -1,6 +1,6 @@
 import nonebot
 from nonebot import CommandGroup, get_plugin_config
-from nonebot.adapters import Event, Message
+from nonebot.adapters import Message
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
@@ -22,7 +22,7 @@ from .get_translate import translate
 from .config import Config
 
 # 获取配置
-config = get_plugin_config(Config).wordle
+wordleConfig = get_plugin_config(Config).wordle
 
 # 命令注册
 __plugin_meta__ = PluginMetadata(
@@ -57,10 +57,10 @@ async def is_enabled(event: MessageEvent) -> bool:
         group_id = str(event.group_id)
         user_id = str(event.get_user_id())
         # 不回复黑名单用户
-        if user_id in config.ban_user:
+        if user_id in wordleConfig.ban_user:
             return False
         # 在允许的群聊中启用
-        if group_id in config.groups_enabled:
+        if group_id in wordleConfig.groups_enabled:
             return True
         return False
     # 启用私聊
@@ -85,7 +85,9 @@ async def is_admin(bot: Bot, event: MessageEvent, state: T_State) -> bool:
     return False
 
 
-wordleGroup: CommandGroup = CommandGroup("wordle", priority=config.command_priority)
+wordleGroup: CommandGroup = CommandGroup(
+    "wordle", priority=wordleConfig.command_priority
+)
 
 debugEnable = wordleGroup.command("debug_enable", permission=SUPERUSER)
 debugDisable = wordleGroup.command("debug_disable", permission=SUPERUSER)
@@ -112,77 +114,77 @@ historyGuess: list[str] = []
 historyGuessWord: list[str] = []
 trycnt: int = 0
 dictionary: list[str] = []
-usedChars: set[str] = {}
+usedChars: set[str] = set()
 
 
 # admin
 @debugEnable.handle()
 async def _():
-    global config
-    config.debug_enabled = True
+    global wordleConfig
+    wordleConfig.debug_enabled = True
 
 
 @debugDisable.handle()
 async def _():
-    global config
-    config.debug_enabled = False
+    global wordleConfig
+    wordleConfig.debug_enabled = False
 
 
 @changeMinLength.handle()
 async def _(args: Message = CommandArg()):
-    global config
+    global wordleConfig
     try:
-        config.length_min = int(args.extract_plain_text()[0])
+        wordleConfig.length_min = int(args.extract_plain_text()[0])
     except TypeError:
         await changeMinLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if config.length_min < 2:
+    if wordleConfig.length_min < 2:
         await changeMinLength.send(
-            f"错误! 最小单词长度({config.length_min})过小, 已自动更改为 2."
+            f"错误! 最小单词长度({wordleConfig.length_min})过小, 已自动更改为 2."
         )
-        config.length_min = 2
-    await changeMinLength.send(f"最小单词长度已设为 {config.length_min}")
-    if config.length_min > config.length_max:
+        wordleConfig.length_min = 2
+    await changeMinLength.send(f"最小单词长度已设为 {wordleConfig.length_min}")
+    if wordleConfig.length_min > wordleConfig.length_max:
         await changeMinLength.send(
-            f"警告! 最小单词长度({config.length_min})大于最大单词长度({config.length_max})."
+            f"警告! 最小单词长度({wordleConfig.length_min})大于最大单词长度({wordleConfig.length_max})."
         )
 
 
 @changeMaxLength.handle()
 async def _(args: Message = CommandArg()):
-    global config
+    global wordleConfig
     try:
-        config.length_max = int(args.extract_plain_text()[0])
+        wordleConfig.length_max = int(args.extract_plain_text()[0])
     except TypeError:
         await changeMaxLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if config.length_max > 15:
+    if wordleConfig.length_max > 15:
         await changeMaxLength.send(
-            f"错误! 最大单词长度({config.length_max})过大, 已自动更改为 15."
+            f"错误! 最大单词长度({wordleConfig.length_max})过大, 已自动更改为 15."
         )
-        config.length_max = 15
-    await changeMaxLength.send(f"最大单词长度已设为 {config.length_max}")
-    if config.length_max < config.length_min:
+        wordleConfig.length_max = 15
+    await changeMaxLength.send(f"最大单词长度已设为 {wordleConfig.length_max}")
+    if wordleConfig.length_max < wordleConfig.length_min:
         await changeMaxLength.send(
-            f"警告! 最大单词长度({config.length_max})小于最小单词长度({config.length_min})."
+            f"警告! 最大单词长度({wordleConfig.length_max})小于最小单词长度({wordleConfig.length_min})."
         )
 
 
 @commandEnable.handle()
 async def _(event: GroupMessageEvent):
-    global config
+    global wordleConfig
     group_id = str(event.group_id)
-    if group_id in config.groups_enabled:
+    if group_id in wordleConfig.groups_enabled:
         await commandEnable.finish(f"群聊 {group_id} 已在白名单中")
-    config.groups_enabled.add(group_id)
+    wordleConfig.groups_enabled.add(group_id)
     await commandEnable.send(f"群聊 {group_id} 加入了白名单")
 
 
 @commandDisable.handle()
 async def _(event: GroupMessageEvent):
-    global config
+    global wordleConfig
     group_id = str(event.group_id)
-    if group_id not in config.groups_enabled:
+    if group_id not in wordleConfig.groups_enabled:
         await commandDisable.finish(f"群聊 {group_id} 不在白名单中")
-    config.groups_enabled.remove(group_id)
+    wordleConfig.groups_enabled.remove(group_id)
     await commandDisable.send(f"群聊 {group_id} 退出了白名单")
 
 
@@ -190,7 +192,7 @@ async def _(event: GroupMessageEvent):
 helpDict = {
     "help": "想想你现在在用什么.",
     "rule": "显示规则, 就像你想的那样.",
-    "start": f"开始 wordle, 你需要提供一个 {config.length_min}~{config.length_max}之间的数作为单词的长度, bot 会帮你选择单词.",
+    "start": f"开始 wordle, 你需要提供一个 {wordleConfig.length_min}~{wordleConfig.length_max}之间的数作为单词的长度, bot 会帮你选择单词.",
     "guess": "猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.",
     "giveup": "需要 @bot 或私聊 这将直接放弃该局游戏并获取正确答案,慎用!",
     "remain": "显示未使用过的单词,就像你想的那样.",
@@ -230,10 +232,10 @@ async def wordleHelp(args: Message = CommandArg()):
 @rule.handle()
 async def wordleRule():
     # await rule.finish("bot: 此功能未完成. bdfs 谢谢!")
-    res: str = """bot: 
+    res: str = """bot:
   -- Wordle --
 规则
-  你需要使用 /wordle.start <len> 来开始 wordle, 
+  你需要使用 /wordle.start <len> 来开始 wordle,
   你需要提供一个 3~12之间的数作为单词的长度, bot 会帮你选择单词.
   使用 /wordle.guess <word> 来猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.
   使用 /wordle.remain 显示未使用过的字母.
@@ -248,7 +250,7 @@ async def wordleDebug(args: Message = CommandArg()):
     global dictionary
     global trycnt
     global historyGuess
-    if not config.debug_enabled:
+    if not wordleConfig.debug_enabled:
         await debug.finish("bot: 你想干什么? [恼]")
     text: str = args.extract_plain_text()
     if text == "dictionary":
