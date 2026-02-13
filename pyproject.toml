@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-wordle-simple"
-version = "0.0.9"
+version = "0.0.10"
 description = "一个简单的没有次数限制的猜词游戏 (Wordle) 插件"
 authors = ["shiyihang2007 <467557146@qq.com>"]
 license = "MIT"

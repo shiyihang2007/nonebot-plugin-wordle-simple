@@ -344,16 +344,18 @@ async def _(
     if guess_word == key_word:
         asyncio.create_task(
             CommandGuess.send(
-                "\n".join(
-                    [
-                        "游戏结束!",
-                        f"""{
-                            f"[CQ:at,qq={int(event.get_user_id())}] 猜到了"
-                            if isinstance(event, GroupMessageEvent)
-                            else ""
-                        }答案为 {key_word}.""",
-                        f"你们总共进行了 {try_cnt}次猜测.",
-                    ]
+                Message(
+                    "\n".join(
+                        [
+                            "游戏结束!",
+                            f"""{
+                                f"[CQ:at,qq={int(event.get_user_id())}] 猜到了"
+                                if isinstance(event, GroupMessageEvent)
+                                else ""
+                            }答案为 {key_word}.""",
+                            f"你们总共进行了 {try_cnt}次猜测.",
+                        ]
+                    )
                 ),
             )
         )
