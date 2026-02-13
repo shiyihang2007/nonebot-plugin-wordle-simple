@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "nonebot-plugin-wordle-simple"
-version = "0.0.7"
+version = "0.0.8"
 description = "一个简单的没有次数限制的猜词游戏 (Wordle) 插件"
 authors = ["shiyihang2007 <467557146@qq.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_wordle_simple"}]
+packages = [{ include = "nonebot_plugin_wordle_simple" }]
 homepage = "https://github.com/shiyihang2007/nonebot-plugin-wordle-simple"
 repository = "https://github.com/shiyihang2007/nonebot-plugin-wordle-simple"
 documentation = "https://github.com/shiyihang2007/nonebot-plugin-wordle-simple"
