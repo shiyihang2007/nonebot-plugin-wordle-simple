@@ -1,19 +1,22 @@
-import nonebot
+"""nonebot-plugin-wordle-simple
+
+nonebot2 插件，实现一个简单的英语猜词游戏
+适用于 onebot.v11 适配器
+"""
+
+import os
+import random
+import asyncio
+
 from nonebot import CommandGroup, get_plugin_config
-from nonebot.adapters import Message
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import to_me
 from nonebot.typing import T_State
 
-import nonebot.adapters.onebot.v11
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, GroupMessageEvent
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageEvent, GroupMessageEvent
 
-
-import os
-import random
-import asyncio
 
 # import nonebot.adapters.console
 
@@ -22,7 +25,7 @@ from .get_translate import translate
 from .config import Config
 
 # 获取配置
-wordleConfig = get_plugin_config(Config).wordle
+wordle_config = get_plugin_config(Config).wordle
 
 # 命令注册
 __plugin_meta__ = PluginMetadata(
@@ -57,10 +60,10 @@ async def is_enabled(event: MessageEvent) -> bool:
         group_id = str(event.group_id)
         user_id = str(event.get_user_id())
         # 不回复黑名单用户
-        if user_id in wordleConfig.ban_user:
+        if user_id in wordle_config.ban_user:
             return False
         # 在允许的群聊中启用
-        if group_id in wordleConfig.groups_enabled:
+        if group_id in wordle_config.groups_enabled:
             return True
         return False
     # 启用私聊
@@ -86,113 +89,113 @@ async def is_admin(bot: Bot, event: MessageEvent, state: T_State) -> bool:
 
 
 wordleGroup: CommandGroup = CommandGroup(
-    "wordle", priority=wordleConfig.command_priority
+    "wordle", priority=wordle_config.command_priority
 )
 
-debugEnable = wordleGroup.command("debug_enable", permission=SUPERUSER)
-debugDisable = wordleGroup.command("debug_disable", permission=SUPERUSER)
-changeMinLength = wordleGroup.command("change_min_length", permission=SUPERUSER)
-changeMaxLength = wordleGroup.command("change_max_length", permission=SUPERUSER)
+CommandDebugEnable = wordleGroup.command("debug_enable", permission=SUPERUSER)
+CommandDebugDisable = wordleGroup.command("debug_disable", permission=SUPERUSER)
+CommandChangeMinLength = wordleGroup.command("change_min_length", permission=SUPERUSER)
+CommandChangeMaxLength = wordleGroup.command("change_max_length", permission=SUPERUSER)
 
-commandEnable = wordleGroup.command("enable", aliases={"启用"}, rule=is_admin)
-commandDisable = wordleGroup.command("disable", aliases={"禁用"}, rule=is_admin)
+CommandEnable = wordleGroup.command("enable", aliases={"启用"}, rule=is_admin)
+CommandDisable = wordleGroup.command("disable", aliases={"禁用"}, rule=is_admin)
 
-wordle = wordleGroup.command(tuple(), rule=is_enabled)
-help = wordleGroup.command("help", rule=is_enabled)
-rule = wordleGroup.command("rule", rule=is_enabled)
-start = wordleGroup.command("start", rule=is_enabled)
-guess = wordleGroup.command("guess", rule=is_enabled)
-giveup = wordleGroup.command("giveup", rule=is_enabled & to_me())
-remain = wordleGroup.command("remain", rule=is_enabled)
-history = wordleGroup.command("history", rule=is_enabled)
-debug = wordleGroup.command("debug", rule=is_enabled)
+CommandWordle = wordleGroup.command(tuple(), rule=is_enabled)
+CommmandHelp = wordleGroup.command("help", rule=is_enabled)
+CommandRule = wordleGroup.command("rule", rule=is_enabled)
+CommandStart = wordleGroup.command("start", rule=is_enabled)
+CommandGuess = wordleGroup.command("guess", rule=is_enabled)
+CommandGiveup = wordleGroup.command("giveup", rule=is_enabled & to_me())
+CommandRemain = wordleGroup.command("remain", rule=is_enabled)
+CommandHistory = wordleGroup.command("history", rule=is_enabled)
+CommandDebug = wordleGroup.command("debug", rule=is_enabled)
 
 
 # 全局变量初始化
-keyWord: str = ""
-historyGuess: list[str] = []
-historyGuessWord: list[str] = []
-trycnt: int = 0
+key_word: str = ""
+history_guess: list[str] = []
+history_guess_word: list[str] = []
+try_cnt: int = 0
 dictionary: list[str] = []
-usedChars: set[str] = set()
+used_chars: set[str] = set()
 
 
-# admin
-@debugEnable.handle()
+@CommandDebugEnable.handle()
 async def _():
-    global wordleConfig
-    wordleConfig.debug_enabled = True
+    wordle_config.debug_enabled = True
 
 
-@debugDisable.handle()
+@CommandDebugDisable.handle()
 async def _():
-    global wordleConfig
-    wordleConfig.debug_enabled = False
+    wordle_config.debug_enabled = False
 
 
-@changeMinLength.handle()
+@CommandChangeMinLength.handle()
 async def _(args: Message = CommandArg()):
-    global wordleConfig
     try:
-        wordleConfig.length_min = int(args.extract_plain_text()[0])
+        wordle_config.length_min = int(args.extract_plain_text().strip())
     except TypeError:
-        await changeMinLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if wordleConfig.length_min < 2:
-        await changeMinLength.send(
-            f"错误! 最小单词长度({wordleConfig.length_min})过小, 已自动更改为 2."
+        await CommandChangeMinLength.finish(
+            f"{args.extract_plain_text().strip()} 不是有效的数字"
         )
-        wordleConfig.length_min = 2
-    await changeMinLength.send(f"最小单词长度已设为 {wordleConfig.length_min}")
-    if wordleConfig.length_min > wordleConfig.length_max:
-        await changeMinLength.send(
-            f"警告! 最小单词长度({wordleConfig.length_min})大于最大单词长度({wordleConfig.length_max})."
+    if wordle_config.length_min < 2:
+        await CommandChangeMinLength.send(
+            f"错误! 最小单词长度({wordle_config.length_min})过小, 已自动更改为 2."
+        )
+        wordle_config.length_min = 2
+    await CommandChangeMinLength.send(f"最小单词长度已设为 {wordle_config.length_min}")
+    if wordle_config.length_min > wordle_config.length_max:
+        await CommandChangeMinLength.send(
+            f"警告! 最小单词长度({wordle_config.length_min})大于最大单词长度({wordle_config.length_max})."
         )
 
 
-@changeMaxLength.handle()
+@CommandChangeMaxLength.handle()
 async def _(args: Message = CommandArg()):
-    global wordleConfig
     try:
-        wordleConfig.length_max = int(args.extract_plain_text()[0])
+        wordle_config.length_max = int(args.extract_plain_text().strip())
     except TypeError:
-        await changeMaxLength.finish(f"{args.extract_plain_text()[0]} 不是有效的数字")
-    if wordleConfig.length_max > 15:
-        await changeMaxLength.send(
-            f"错误! 最大单词长度({wordleConfig.length_max})过大, 已自动更改为 15."
+        await CommandChangeMaxLength.finish(
+            f"{args.extract_plain_text().strip()} 不是有效的数字"
         )
-        wordleConfig.length_max = 15
-    await changeMaxLength.send(f"最大单词长度已设为 {wordleConfig.length_max}")
-    if wordleConfig.length_max < wordleConfig.length_min:
-        await changeMaxLength.send(
-            f"警告! 最大单词长度({wordleConfig.length_max})小于最小单词长度({wordleConfig.length_min})."
+    if wordle_config.length_max > 15:
+        await CommandChangeMaxLength.send(
+            f"错误! 最大单词长度({wordle_config.length_max})过大, 已自动更改为 15."
+        )
+        wordle_config.length_max = 15
+    await CommandChangeMaxLength.send(f"最大单词长度已设为 {wordle_config.length_max}")
+    if wordle_config.length_max < wordle_config.length_min:
+        await CommandChangeMaxLength.send(
+            f"警告! 最大单词长度({wordle_config.length_max})小于最小单词长度({wordle_config.length_min})."
         )
 
 
-@commandEnable.handle()
+@CommandEnable.handle()
 async def _(event: GroupMessageEvent):
-    global wordleConfig
     group_id = str(event.group_id)
-    if group_id in wordleConfig.groups_enabled:
-        await commandEnable.finish(f"群聊 {group_id} 已在白名单中")
-    wordleConfig.groups_enabled.add(group_id)
-    await commandEnable.send(f"群聊 {group_id} 加入了白名单")
+    if group_id in wordle_config.groups_enabled:
+        await CommandEnable.finish(f"群聊 {group_id} 已在白名单中")
+    wordle_config.groups_enabled.add(group_id)
+    await CommandEnable.send(f"群聊 {group_id} 加入了白名单")
 
 
-@commandDisable.handle()
+@CommandDisable.handle()
 async def _(event: GroupMessageEvent):
-    global wordleConfig
     group_id = str(event.group_id)
-    if group_id not in wordleConfig.groups_enabled:
-        await commandDisable.finish(f"群聊 {group_id} 不在白名单中")
-    wordleConfig.groups_enabled.remove(group_id)
-    await commandDisable.send(f"群聊 {group_id} 退出了白名单")
+    if group_id not in wordle_config.groups_enabled:
+        await CommandDisable.finish(f"群聊 {group_id} 不在白名单中")
+    wordle_config.groups_enabled.remove(group_id)
+    await CommandDisable.send(f"群聊 {group_id} 退出了白名单")
 
 
 # 帮助列表
 helpDict = {
     "help": "想想你现在在用什么.",
     "rule": "显示规则, 就像你想的那样.",
-    "start": f"开始 wordle, 你需要提供一个 {wordleConfig.length_min}~{wordleConfig.length_max}之间的数作为单词的长度, bot 会帮你选择单词.",
+    "start": (
+        f"开始 wordle, 你需要提供一个 {wordle_config.length_min}~{wordle_config.length_max} 之间的数作为单词的长度, "
+        + "bot 会帮你选择单词."
+    ),
     "guess": "猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.",
     "giveup": "需要 @bot 或私聊 这将直接放弃该局游戏并获取正确答案,慎用!",
     "remain": "显示未使用过的单词,就像你想的那样.",
@@ -200,58 +203,51 @@ helpDict = {
 }
 
 
-@wordle.handle()
-async def wordleHandle(args: Message = CommandArg()):
-    await wordle.send(
-        "[Error] bot: Unknown Command\n" + "Press 'wordle.help' to show command list."
+@CommandWordle.handle()
+async def _():
+    await CommandWordle.send(
+        "[Error] Unknown Command\nPress 'wordle.help' to show command list."
     )
 
 
-# 帮助
-@help.handle()
-async def wordleHelp(args: Message = CommandArg()):
+@CommmandHelp.handle()
+async def _(args: Message = CommandArg()):
+    # 帮助
     if len(args) == 0:
         # 简要帮助
-        res: str = "bot: \n-- Wordle --\n命令列表\n"
-        for i in helpDict.keys():
-            res += f"  wordle.{i} {helpDict[i]}\n"
-        res = res + "注意 此功能可能会造成刷屏"
-        await help.finish(res)
+        res: list[str] = ["\n-- Wordle --\n命令列表\n"]
+        res.extend([f"  wordle.{i} {item}" for i, item in enumerate(helpDict)])
+        res.append("注意 此功能可能会造成刷屏")
+        await CommmandHelp.finish("\n".join(res))
     else:
         # 详细帮助
-        command = args.extract_plain_text()
-        if command in helpDict.keys():
-            await help.finish("bot: " + helpDict[command])
-        else:
-            await help.finish(
-                "[Error] bot: Unknown Command; return '请给出正确的参数!'."
-            )
+        command = args.extract_plain_text().strip().lower()
+        await CommmandHelp.finish(
+            f"{helpDict[command]}"
+            if command in helpDict
+            else "[Error] Unknown Command; return '请给出正确的参数!'."
+        )
 
 
 # 规则
-@rule.handle()
-async def wordleRule():
-    # await rule.finish("bot: 此功能未完成. bdfs 谢谢!")
-    res: str = """bot:
+@CommandRule.handle()
+async def _():
+    res: str = f"""bot:
   -- Wordle --
 规则
   你需要使用 /wordle.start <len> 来开始 wordle,
-  你需要提供一个 3~12之间的数作为单词的长度, bot 会帮你选择单词.
+  你需要提供一个 {wordle_config.length_min}~{wordle_config.length_max}之间的数作为单词的长度, bot 会帮你选择单词.
   使用 /wordle.guess <word> 来猜词, 你需要提供正确长度的单词, bot 会告诉你匹配情况.
   使用 /wordle.remain 显示未使用过的字母.
   祝您愉快~"""
-    await rule.send(res)
+    await CommandRule.send(res)
 
 
 # 调试
-@debug.handle()
-async def wordleDebug(args: Message = CommandArg()):
-    global keyWord
-    global dictionary
-    global trycnt
-    global historyGuess
-    if not wordleConfig.debug_enabled:
-        await debug.finish("bot: 你想干什么? [恼]")
+@CommandDebug.handle()
+async def _(args: Message = CommandArg()):
+    if not wordle_config.debug_enabled:
+        await CommandDebug.finish("你想干什么? [恼]")
     text: str = args.extract_plain_text()
     if text == "dictionary":
         cnt: int = 0
@@ -260,183 +256,188 @@ async def wordleDebug(args: Message = CommandArg()):
             cnt = cnt + 1
             output = output + "\n" + i
             if cnt > 20:
-                await debug.send("[Debug] bot: \n -- dictionary --" + output)
-                await debug.finish(
-                    "[Debug] bot: have more... [All size " + str(len(dictionary)) + "]"
+                await CommandDebug.send("[Debug] \n -- dictionary --" + output)
+                await CommandDebug.finish(
+                    "[Debug] have more... [All size " + str(len(dictionary)) + "]"
                 )
-        await debug.send("[Debug] bot: \n -- dictionary --" + output)
-        await debug.finish("[Debug] bot: done. [All size " + str(len(dictionary)) + "]")
+        await CommandDebug.send("[Debug] \n -- dictionary --" + output)
+        await CommandDebug.finish(
+            "[Debug] done. [All size " + str(len(dictionary)) + "]"
+        )
     if text == "keyword":
-        await debug.finish("[Debug] bot: keyWord is " + str(keyWord) + ".")
+        await CommandDebug.finish("[Debug] keyWord is " + str(key_word) + ".")
 
 
 # 主处理流程
-@start.handle()
-async def wordleStart(args: Message = CommandArg()):
-    global keyWord
+@CommandStart.handle()
+async def _(args: Message = CommandArg()):
+    global key_word
     global dictionary
-    global trycnt
-    global historyGuess
-    global historyGuessWord
-    global usedChars
-    if keyWord != "":
-        await start.finish("bot: 当前已有正在进行的 Wordle!")
+    global try_cnt
+    global history_guess
+    global history_guess_word
+    global used_chars
+    if key_word != "":
+        await CommandStart.finish("当前已有正在进行的 Wordle!")
     text = args.extract_plain_text()
-    wordlen: int = 0
+    word_len: int = 0
     try:
-        wordlen = int(text)
-        if wordlen < 3:
-            await start.finish(
-                "[Error] bot: Unexcepted Input; Return '单词长度不应小于3!'."
+        word_len = int(text)
+        if word_len < 3:
+            await CommandStart.finish(
+                "[Error] Unexcepted Input; Return '单词长度不应小于3!'."
             )
-        if wordlen > 12:
-            await start.finish(
-                "[Error] bot: Unexcepted Input; Return '单词长度不应大于12!'."
+        if word_len > 12:
+            await CommandStart.finish(
+                "[Error] Unexcepted Input; Return '单词长度不应大于12!'."
             )
-        # await start.send("[Info] bot: Finding Word...")
     except ValueError:
-        await start.finish("[Error] bot: ValueError; Return '请给出正确的单词长度!'.")
+        await CommandStart.finish("[Error] ValueError; Return '请给出正确的单词长度!'.")
     # 读取字典
-    fdict = open(os.path.split(__file__)[0] + "/AnswerDictionary.txt", "r")
-    dictionary = fdict.readlines()
-    fdict.close()
+    with open(
+        os.path.split(__file__)[0] + "/AnswerDictionary.txt", "r", encoding="utf-8"
+    ) as fdict:
+        dictionary = fdict.readlines()
     wordlist: list[str] = []
-    for i in range(len(dictionary)):
-        dictionary[i] = ((dictionary[i].split())[0]).lower()
-        if len(dictionary[i]) == wordlen:
-            wordlist.append(dictionary[i])
-    trycnt = 0
-    historyGuessWord = []
-    historyGuess = []
-    usedChars = set()
-    keyWord = wordlist[random.randint(0, len(wordlist))]
-    fdict = open(os.path.split(__file__)[0] + "/GuessDictionary.txt", "r")
-    dictionary = fdict.readlines()
-    fdict.close()
-    for i in range(len(dictionary)):
-        dictionary[i] = ((dictionary[i].split())[0]).lower()
-    await start.send("bot: Word Found")
+    for i, word in enumerate(dictionary):
+        word = ((word.split())[0]).lower()
+        if len(word) == word_len:
+            wordlist.append(word)
+    try_cnt = 0
+    history_guess_word = []
+    history_guess = []
+    used_chars = set()
+    key_word = wordlist[random.randint(0, len(wordlist))]
+    with open(
+        os.path.split(__file__)[0] + "/GuessDictionary.txt", "r", encoding="utf-8"
+    ) as fdict:
+        dictionary = fdict.readlines()
+    for i, word in enumerate(dictionary):
+        dictionary[i] = ((word.split())[0]).lower()
+    await CommandStart.send("Word Found")
 
 
-@guess.handle()
-async def wordleGuessPlus(
-    bot: Bot,
-    event: GroupMessageEvent,
-    args: nonebot.adapters.onebot.v11.Message = CommandArg(),
+@CommandGuess.handle()
+async def _(
+    event: MessageEvent,
+    args: Message = CommandArg(),
 ):
-    global keyWord
+    global key_word
     global dictionary
-    global trycnt
-    global historyGuess
-    global historyGuessWord
-    global usedChars
-    if keyWord == "":
-        await guess.finish("bot: 当前没有正在进行的 Wordle!")
-    # await guess.finish("bot: 此功能未完成, 正在咕咕中! [100/100]")
-    guessWord = args.extract_plain_text().split()[0].lower()
-    if dictionary.count(guessWord) == 0:
-        await guess.finish("bot: " + guessWord + " 不是一个单词!")
-    if len(guessWord) != len(keyWord):
-        await guess.finish("bot: 请输入长度为 " + str(len(keyWord)) + " 的单词!")
-    if guessWord in historyGuessWord:
-        await guess.finish("bot: 此单词已经尝试过!")
-    historyGuessWord.append(guessWord)
-    trycnt = trycnt + 1
-    if guessWord == keyWord:
-        # await guess.send("bot: Game Over!")
-        # TODO: 检测是否处于群聊
+    global try_cnt
+    global used_chars
+    if key_word == "":
+        await CommandGuess.finish("当前没有正在进行的 Wordle!")
+    guess_word = args.extract_plain_text().split()[0].lower()
+    if dictionary.count(guess_word) == 0:
+        await CommandGuess.finish(f"{guess_word} 不是一个单词!")
+    if len(guess_word) != len(key_word):
+        await CommandGuess.finish(f"请输入长度为 {len(key_word)} 的单词!")
+    if guess_word in history_guess_word:
+        await CommandGuess.finish("此单词已经尝试过!")
+    history_guess_word.append(guess_word)
+    try_cnt = try_cnt + 1
+    if guess_word == key_word:
         asyncio.create_task(
-            bot.send_group_msg(
-                group_id=int(event.get_session_id().split("_")[1]),
-                message=f"bot: 游戏结束! \n[CQ:at,qq={str(int(event.get_user_id()))}] 猜到了答案为 {keyWord}.\n你们总共进行了 {str(trycnt)}次猜测.\n翻译:\n{await translate(keyWord)}",
+            CommandGuess.send(
+                "\n".join(
+                    [
+                        "游戏结束!",
+                        f"""{
+                            f"[CQ:at,qq={int(event.get_user_id())}] 猜到了"
+                            if isinstance(event, GroupMessageEvent)
+                            else ""
+                        }答案为 {key_word}.""",
+                        f"你们总共进行了 {try_cnt}次猜测.",
+                    ]
+                ),
             )
         )
-        # await guess.send("bot: 正在清理缓存.")
-        keyWord = ""
-        trycnt = 0
-        historyGuess.clear()
+        asyncio.create_task(
+            CommandGuess.send(
+                f"单词 {key_word} 翻译:\n{await translate(key_word)}",
+            )
+        )
+        key_word = ""
+        try_cnt = 0
+        history_guess.clear()
         dictionary = []
-        usedChars = set()
+        used_chars = set()
         return
-        # await guess.finish("bot: 清理结束.")
-    matchState: list = [0] * len(keyWord)
-    matchCount: list = [0] * 26
-    for i in range(len(keyWord)):
-        usedChars.add(guessWord[i])
-        if guessWord[i] == keyWord[i]:
-            matchState[i] = 1
-            matchCount[ord(guessWord[i]) - ord("a")] += 1
-    for i in range(len(guessWord)):
-        if matchState[i] == 1:
+    match_state: list = [0] * len(key_word)
+    match_count: list = [0] * 26
+    for i, key in enumerate(key_word):
+        used_chars.add(guess_word[i])
+        if guess_word[i] == key:
+            match_state[i] = 1
+            match_count[ord(guess_word[i]) - ord("a")] += 1
+    for i, guess in enumerate(guess_word):
+        if match_state[i] == 1:
             continue
-        if matchCount[ord(guessWord[i]) - ord("a")] < keyWord.count(guessWord[i]):
-            matchState[i] = 2
-            matchCount[ord(guessWord[i]) - ord("a")] += 1
-    res: str = ""
-    for i in range(len(guessWord)):
-        res = res + guessWord[i]
-        res = res + "*+?"[matchState[i]]
-    historyGuess.append(res)
-    if args.extract_plain_text() in ["-p", "--plain"]:
-        sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
-        for i in historyGuess:
-            sendMessage = sendMessage + "\n" + i
-    else:
-        sendImg: str = wordleOutput(historyGuess)
-        sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
-    await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
-
-
-@giveup.handle()
-async def wordleGiveUp():
-    global keyWord
-    global dictionary
-    global trycnt
-    global historyGuess
-    if keyWord == "":
-        await giveup.finish("bot: 当前没有正在进行的 Wordle!")
-    asyncio.create_task(
-        await guess.send(
-            "bot: 放弃了这局 wordle! \n答案为 "
-            + keyWord
-            + "!\n"
-            + "你们总共进行了 "
-            + str(trycnt)
-            + "次猜测."
+        if match_count[ord(guess) - ord("a")] < key_word.count(guess):
+            match_state[i] = 2
+            match_count[ord(guess) - ord("a")] += 1
+    history_guess.append(
+        "".join(
+            [f"{guess}{'*+?'[match_state[i]]}" for i, guess in enumerate(guess_word)]
         )
     )
-    keyWord = ""
-    trycnt = 0
-    historyGuess.clear()
-    dictionary = []
-    await giveup.finish("bot: 清理结束.")
-
-
-@remain.handle()
-async def wordleRemain(args: Message = CommandArg()):
-    global keyWord
-    global usedChars
-    if keyWord == "":
-        await remain.finish("bot: 当前没有正在进行的 Wordle!")
-    output: str = "bot: \n 未使用的字母: "
-    for i in [chr(x) for x in range(ord("a"), ord("z") + 1) if chr(x) not in usedChars]:
-        output = output + i + " "
-    await remain.send(output)
-
-
-@history.handle()
-async def wordleHistoryPlus(args: nonebot.adapters.onebot.v11.Message = CommandArg()):
-    global keyWord
-    global dictionary
-    global trycnt
-    global historyGuess
-    if keyWord == "":
-        await remain.finish("bot: 当前没有正在进行的 Wordle!")
     if args.extract_plain_text() in ["-p", "--plain"]:
-        sendMessage: str = "bot: \n" + "尝试次数: " + str(trycnt)
-        for i in historyGuess:
-            sendMessage = sendMessage + "\n" + i
+        send_message_list: list[str] = [f"尝试次数: {try_cnt}"]
+        send_message_list.extend(history_guess)
+        send_message = "\n".join(send_message_list)
     else:
-        sendImg: str = wordleOutput(historyGuess)
-        sendMessage: str = "[CQ:image,file=base64://" + sendImg + "]"
-    await guess.send(nonebot.adapters.onebot.v11.Message(sendMessage))
+        send_img: str = wordleOutput(history_guess)
+        send_message: str = f"[CQ:image,file=base64://{send_img}]"
+    await CommandHistory.send(Message(send_message))
+
+
+@CommandGiveup.handle()
+async def _():
+    global key_word
+    global try_cnt
+    if key_word == "":
+        await CommandGiveup.finish("当前没有正在进行的 Wordle!")
+    asyncio.create_task(
+        await CommandGiveup.send(
+            "\n".join(
+                [
+                    "放弃了这局 wordle!",
+                    f"答案为 {key_word} !",
+                    f"你们总共进行了 {try_cnt} 次猜测.",
+                ]
+            )
+        )
+    )
+    key_word = ""
+    try_cnt = 0
+    history_guess.clear()
+    dictionary.clear()
+    await CommandGiveup.finish("清理结束.")
+
+
+@CommandRemain.handle()
+async def _():
+    if key_word == "":
+        await CommandRemain.finish("当前没有正在进行的 Wordle!")
+    send_message_list: list[str] = [
+        "未使用的字母: ",
+        ", ".join(
+            [chr(x) for x in range(ord("a"), ord("z") + 1) if chr(x) not in used_chars]
+        ),
+    ]
+    await CommandRemain.send("\n".join(send_message_list))
+
+
+@CommandHistory.handle()
+async def _(args: Message = CommandArg()):
+    if key_word == "":
+        await CommandRemain.finish("当前没有正在进行的 Wordle!")
+    if args.extract_plain_text() in ["-p", "--plain"]:
+        send_message_list: list[str] = [f"尝试次数: {try_cnt}"]
+        send_message_list.extend(history_guess)
+        send_message = "\n".join(send_message_list)
+    else:
+        send_img: str = wordleOutput(history_guess)
+        send_message: str = f"[CQ:image,file=base64://{send_img}]"
+    await CommandHistory.send(Message(send_message))
