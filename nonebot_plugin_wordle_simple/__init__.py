@@ -17,10 +17,7 @@ from nonebot.typing import T_State
 
 from nonebot.adapters.onebot.v11 import Bot, Message, MessageEvent, GroupMessageEvent
 
-
-# import nonebot.adapters.console
-
-from .img import wordleOutput
+from .img import wordle_output
 from .get_translate import translate
 from .config import Config
 
@@ -225,7 +222,10 @@ async def _(args: Message = CommandArg()):
         await CommmandHelp.finish(
             f"{helpDict[command]}"
             if command in helpDict
-            else "[Error] Unknown Command; return '请给出正确的参数!'."
+            else (
+                f"错误: 找不到指令 {command} !\n可用指令:\n"
+                + "\n".join(helpDict.keys())
+            )
         )
 
 
@@ -283,19 +283,21 @@ async def _(args: Message = CommandArg()):
     word_len: int = 0
     try:
         word_len = int(text)
-        if word_len < 3:
+        if word_len < wordle_config.length_min:
             await CommandStart.finish(
-                "[Error] Unexcepted Input; Return '单词长度不应小于3!'."
+                f"错误: 单词长度不应小于 {wordle_config.length_min} !"
             )
-        if word_len > 12:
+        if word_len > wordle_config.length_max:
             await CommandStart.finish(
-                "[Error] Unexcepted Input; Return '单词长度不应大于12!'."
+                f"错误: 单词长度不应大于 {wordle_config.length_max}"
             )
     except ValueError:
-        await CommandStart.finish("[Error] ValueError; Return '请给出正确的单词长度!'.")
+        await CommandStart.finish("请给出正确的单词长度!")
     # 读取字典
     with open(
-        os.path.split(__file__)[0] + "/AnswerDictionary.txt", "r", encoding="utf-8"
+        os.path.split(__file__)[0] + "/" + wordle_config.dictionary_answer_path,
+        "r",
+        encoding="utf-8",
     ) as fdict:
         dictionary = fdict.readlines()
     wordlist: list[str] = []
@@ -309,12 +311,14 @@ async def _(args: Message = CommandArg()):
     used_chars = set()
     key_word = wordlist[random.randint(0, len(wordlist))]
     with open(
-        os.path.split(__file__)[0] + "/GuessDictionary.txt", "r", encoding="utf-8"
+        os.path.split(__file__)[0] + "/" + wordle_config.dictionary_answer_path,
+        "r",
+        encoding="utf-8",
     ) as fdict:
         dictionary = fdict.readlines()
     for i, word in enumerate(dictionary):
         dictionary[i] = ((word.split())[0]).lower()
-    await CommandStart.send("Word Found")
+    await CommandStart.send("初始化完成, 单词已确定")
 
 
 @CommandGuess.handle()
@@ -387,7 +391,7 @@ async def _(
         send_message_list.extend(history_guess)
         send_message = "\n".join(send_message_list)
     else:
-        send_img: str = wordleOutput(history_guess)
+        send_img: str = wordle_output(history_guess, wordle_config.font_path)
         send_message: str = f"[CQ:image,file=base64://{send_img}]"
     await CommandHistory.send(Message(send_message))
 
@@ -399,7 +403,7 @@ async def _():
     if key_word == "":
         await CommandGiveup.finish("当前没有正在进行的 Wordle!")
     asyncio.create_task(
-        await CommandGiveup.send(
+        CommandGiveup.send(
             "\n".join(
                 [
                     "放弃了这局 wordle!",
@@ -413,7 +417,6 @@ async def _():
     try_cnt = 0
     history_guess.clear()
     dictionary.clear()
-    await CommandGiveup.finish("清理结束.")
 
 
 @CommandRemain.handle()
@@ -438,6 +441,6 @@ async def _(args: Message = CommandArg()):
         send_message_list.extend(history_guess)
         send_message = "\n".join(send_message_list)
     else:
-        send_img: str = wordleOutput(history_guess)
+        send_img: str = wordle_output(history_guess, wordle_config.font_path)
         send_message: str = f"[CQ:image,file=base64://{send_img}]"
     await CommandHistory.send(Message(send_message))

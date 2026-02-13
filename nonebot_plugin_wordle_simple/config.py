@@ -12,6 +12,10 @@ class ScopedConfig(BaseModel):
 
     debug_enabled: bool = False
 
+    font_path: str = "./resources/FiraCode-Medium.ttf"
+    dictionary_answer_path: str = "./resources/DictionaryAnswer.txt"
+    dictionary_guess_path: str = "./resources/DictionaryGuess.txt"
+
 
 class Config(BaseModel):
     wordle: ScopedConfig
